@@ -8,7 +8,7 @@ server.listen( 8080 );
 function serverFn( req, res )
 {
     var filename = req.url.substring( 1, req.url.length );
-    if( filename == "" )
+    if( filename === "" )
     {
         filename = "./index.html";
     }
@@ -48,18 +48,20 @@ function serverFn( req, res )
 
 function listStudents( req, res )
 {
-  var db = new sqlite.Database( "school.sqlite")
+  var db = new sqlite.Database( "school.sqlite");
   var resp_text = "<!DOCTYPE html>"+
   "<html>"+
-  "<body>";
+  "<body>"+
+  "<table>"+
+  "<tbody>";
   db.each( "SELECT Name FROM Students", function(err,row)
   {
     console.log("Student: "+row.Name);
-    resp_text += row.Name + "\n\n";
+    resp_text += "<tr>"+"<td>"+row.Name +"</tr>"+"</td>";
   });
   db.close(
     function() {
-      resp_text +="</body>" + "</html>";
+      resp_text +="</tbody>"+"</table>"+"</body>" + "</html>";
       res.writeHead (200);
       res.end(resp_text);
     });
@@ -67,17 +69,19 @@ function listStudents( req, res )
 
 function listTeachers( req, res )
 {
-  var db = new sqlite.Database( "school.sqlite")
+  var db = new sqlite.Database( "school.sqlite");
   var resp_text = "<!DOCTYPE html>"+
   "<html>"+
-  "<body>";
+  "<body>"+
+  "<table>"+
+  "<tbody>";
   db.each( "SELECT Name FROM Teachers", function(err,row)
   {
-    resp_text += row.Name;
+    resp_text += "<tr>"+"<td>"+row.Name+"</tr>"+"</td>";
   });
   db.close(
     function(){
-      resp_text += "</body>"+"</html>";
+      resp_text += "</tbody>"+"</table>"+"</body>"+"</html>";
       res.writeHead(200);
       res.end(resp_text);
     });
@@ -85,17 +89,19 @@ function listTeachers( req, res )
 
 function listClasses(req,res)
 {
-  var db = new sqlite.Database( "school.sqlite")
+  var db = new sqlite.Database( "school.sqlite");
   var resp_text = "<!DOCTYPE html>"+
   "<html>"+
-  "<body>";
+  "<body>"+
+  "<table>"+
+  "<tbody>";
   db.each( "SELECT Name FROM Classes", function(err,row)
   {
-    resp_text += row.Name;
+    resp_text += "<tr>"+"<td>"+row.Name+"</tr>"+"</td>";
   });
   db.close(
     function(){
-      resp_text += "</body>"+"</html>";
+      resp_text += "</tbody>"+"</table>"+"</body>"+"</html>";
       res.writeHead(200);
       res.end( resp_text );
     });
@@ -103,7 +109,7 @@ function listClasses(req,res)
 
 function listEnrollments(req,res)
 {
-  var db = new sqlite.Database( "school.sqlite")
+  var db = new sqlite.Database( "school.sqlite");
   var resp_text = "<!DOCTYPE html>"+
   "<html>"+
   "<body>"+
@@ -136,7 +142,7 @@ function listEnrollments(req,res)
         for (i = 0; i < ClassIdArray.length; i++)
         {
           //placed this in a for loop because the results were always coming up in the body outside the table but this still occurs, assume it is an issue with asynchronus processes but this should fix that, right?
-          resp_text += "<tr>"+StudentIdArray[i]+": </tr>"+" <tr>"+ StudentArray[i]+"</tr>"+" <tr>"+ClassIdArray[i]+": </tr>"+" <tr>"+ClassesArray[i]+"</tr>";
+          resp_text += "<tr><td>"+StudentIdArray[i]+": </td>"+" <td>"+ StudentArray[i]+"</td>"+"\n"+" <td>"+ClassIdArray[i]+": </td>"+" <td>"+ClassesArray[i]+"</td></tr>"+"\n";
         }
         resp_text += "</tbody>"+"</table>"+"</body>" +"</html>";
         res.writeHead(200);
@@ -147,7 +153,7 @@ function listEnrollments(req,res)
 
 function listAssignments(req,res)
 {
-  var db = new sqlite.Database( "school.sqlite")
+  var db = new sqlite.Database( "school.sqlite");
   var resp_text = "<!DOCTYPE html>"+
   "<html>"+
   "<body>"+
@@ -157,6 +163,7 @@ function listAssignments(req,res)
   var TeacherIdArray = [];
   var TeacherArray = [];
   var ClassesArray = [];
+  console.log(db);
   db.each(
     "SELECT TeachingAssignments.ClassId, TeachingAssignments.TeacherId, Teachers.Name FROM TeachingAssignments JOIN Teachers ON TeachingAssignments.TeacherId = Teachers.Id",
   function( err, row ) {
@@ -176,7 +183,7 @@ function listAssignments(req,res)
     {
       for (i = 0; i < ClassIdArray.length; i++)
       {
-        resp_text += "<tr>"+TeacherIdArray[i]+": </tr>"+" <tr>"+ TeacherArray[i]+"</tr>"+" <tr>"+ClassIdArray[i]+": </tr>"+" <tr>"+ClassesArray[i]+"</tr>";
+        resp_text += "<tr><td>"+TeacherIdArray[i]+": </td>"+" <td>"+ TeacherArray[i]+"</td>"+" <td>"+ClassIdArray[i]+": </td>"+" <td>"+ClassesArray[i]+"</td></tr>";
       }
       resp_text += "</tbody>"+"</table>"+"</body>" +"</html>";
       res.writeHead(200);
@@ -200,7 +207,7 @@ function addEnrollment(req,res)
         add_class = inp[1];
     }
   }
-  if (student = null || add_class == null)
+  if (student === null || add_class === null)
   {
     res.writeHead(200);
     res.end("error, no input.");
@@ -208,10 +215,12 @@ function addEnrollment(req,res)
   }
   else
   {
-    var sql_add = "INSERT INTO Enrollments ('ClassId','StudentId') VALUES('"+ /*use join to make ID variables from cleartext inputs*/"')";
+    var sql_add = "INSERT INTO Enrollments ('ClassId','StudentId') VALUES('"+ add_class+"','"+student+"')";
+    db.run( sql_add );
+    db.close();
     console.log(req.url);
     res.writeHead(200);
-    res.end();
+    res.end("<html><body>Student "+student+" added to class "+add_class+"</body></html>");
   }
 }
 
@@ -221,17 +230,42 @@ function addStudent(req,res)
   console.log(req.url);
   res.writeHead(200);
   var raw_input = req.url.split("?")[1];
-  var value = raw_input.split("=")[1];
-  var student = value.replace(/\+/, ' ');
-  var sql_add = "INSERT INTO Students ('Name') VALUES('"+ student +"')";
-  res.end("<html><body>Student"+ student +"added!</body></html>");
+  var fields = raw_input.split("&");
+  var student = null, year = null;
+  for(var i = 0; i< fields.length; i++)
+  {
+    var inp = fields[i].split( "=" );
+    if( inp[0] == 'student' ) {
+        student = inp[1].split("+").join(" ");
+    }
+    else if( inp[0] == 'year' ) {
+        if(typeof inp[1] !== 'number'){
+          year = inp[1];
+      }
+        else{
+          year = 1;
+        }
+    }
+  }
+  if(student === "" || student === null)
+  {
+    db.close();
+    res.writeHead(200);
+    res.end("<html><body>No student added</body></html>");
+  }
+  var sql_add = "INSERT INTO Students ('Name','Year') VALUES('"+ student +"','"+year+"')";
+  db.run( sql_add );
+  db.close();
+  res.writeHead(200);
+  res.end("<html><body>Student "+ student +" added!</body></html>");
 }
 
 function serveFile(filename,req,res)
 {
+  var contents = "";
   try
   {
-    var contents = fs.readFileSync( filename ).toString();
+    contents = fs.readFileSync( filename ).toString();
   }
   catch( e )
   {
