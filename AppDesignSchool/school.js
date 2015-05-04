@@ -28,7 +28,7 @@ function serverFn( req, res )
     {
         listEnrollments( req, res );
     }
-    else if( filename.substring( 0, 16 ) == "list_assignmnets" )
+    else if( filename.substring( 0, 16 ) == "list_assignments" )
     {
         listAssignments( req, res );
     }
@@ -129,7 +129,7 @@ function listEnrollments(req,res)
       console.log(row);
       ClassesArray.push(row.Name);
     }
-  )
+  );
   db.close(
     function()
       {
@@ -158,8 +158,30 @@ function listAssignments(req,res)
   var TeacherArray = [];
   var ClassesArray = [];
   db.each(
-    
-  )
+    "SELECT TeachingAssignments.ClassId, TeachingAssignments.TeacherId, Teachers.Name FROM TeachingAssignments JOIN Teachers ON TeachingAssignments.TeacherId = Teachers.Id",
+  function( err, row ) {
+    console.log(row);
+    ClassIdArray.push(row.ClassId);
+    TeacherIdArray.push(row.TeacherId);
+    TeacherArray.push(row.Name);
+  });
+  db.each(
+    "SELECT TeachingAssignments.ClassId, TeachingAssignments.TeacherId, Classes.Name FROM TeachingAssignments JOIN Classes ON TeachingAssignments.ClassId = Classes.Id",
+  function( err, row ) {
+    console.log(row);
+    ClassesArray.push(row.Name);
+  });
+  db.close(
+    function()
+    {
+      for (i = 0; i < ClassIdArray.length; i++)
+      {
+        resp_text += "<tr>"+TeacherIdArray[i]+": </tr>"+" <tr>"+ TeacherArray[i]+"</tr>"+" <tr>"+ClassIdArray[i]+": </tr>"+" <tr>"+ClassesArray[i]+"</tr>";
+      }
+      resp_text += "</tbody>"+"</table>"+"</body>" +"</html>";
+      res.writeHead(200);
+      res.end(resp_text);
+    });
 }
 
 function addEnrollment(req,res)
@@ -199,7 +221,8 @@ function addStudent(req,res)
   console.log(req.url);
   res.writeHead(200);
   var raw_input = req.url.split("?")[1];
-  var student = raw_input.replace(/\+/, ' ');
+  var value = raw_input.split("=")[1];
+  var student = value.replace(/\+/, ' ');
   var sql_add = "INSERT INTO Students ('Name') VALUES('"+ student +"')";
   res.end("<html><body>Student"+ student +"added!</body></html>");
 }
