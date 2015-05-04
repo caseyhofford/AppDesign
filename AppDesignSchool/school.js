@@ -163,10 +163,11 @@ function listAssignments(req,res)
   var TeacherIdArray = [];
   var TeacherArray = [];
   var ClassesArray = [];
-  console.log(db);
+  console.log("sane");
   db.each(
     "SELECT TeachingAssignments.ClassId, TeachingAssignments.TeacherId, Teachers.Name FROM TeachingAssignments JOIN Teachers ON TeachingAssignments.TeacherId = Teachers.Id",
   function( err, row ) {
+    console.log("alsosane");
     console.log(row);
     ClassIdArray.push(row.ClassId);
     TeacherIdArray.push(row.TeacherId);
@@ -252,6 +253,11 @@ function addStudent(req,res)
     db.close();
     res.writeHead(200);
     res.end("<html><body>No student added</body></html>");
+  }
+  if(year>4){
+    db.close();
+    res.writeHead(200);
+    res.end("<html><body>No student added, year out of range</body></html>");
   }
   var sql_add = "INSERT INTO Students ('Name','Year') VALUES('"+ student +"','"+year+"')";
   db.run( sql_add );
