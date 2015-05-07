@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <div style="background-color: red; text-align: center;">
+  <p>
+    <font size="6" face="Impact,Bold">MY LINK DATABASE</font>
+  </p>
+</div>
+<link REL="StyleSheet" TYPE="text/css" HREF="style.css" />
+</head>
+<body onload="startUp()" style="background-color: green">
+  <script src="linkdb_front.js">
+  </script>
+  <table>
+    <tbody id="table">
+    </tbody>
+  </table>
+<input type="text" id="add_link" placeholder="New Link URL"></input>
+<input type="text" id="add_name" placeholder="New Link Title"></input>
+<input type="button" value="Add Link" onclick="add()"></input>
+</body>
+</html>
